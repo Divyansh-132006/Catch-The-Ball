@@ -1,4 +1,5 @@
-(() => {
+ (() => {
+      // Get elements
       const gameContainer = document.getElementById('gameContainer');
       const basket = document.getElementById('basket');
       const scoreBoard = document.getElementById('scoreBoard');
@@ -7,48 +8,58 @@
       const startBtn = document.getElementById('startBtn');
       const resetBtn = document.getElementById('resetBtn');
       const gameOverScreen = document.getElementById('gameOverScreen');
-      const gameOverText = document.getElementById('gameOverText');
       const finalScore = document.getElementById('finalScore');
       const gameOverReason = document.getElementById('gameOverReason');
       const playAgainBtn = document.getElementById('playAgainBtn');
-      const tiltIndicator = document.getElementById('tiltIndicator');
+      const instructions = document.getElementById('instructions');
       
-      const containerWidth = gameContainer.clientWidth;
-      const containerHeight = gameContainer.clientHeight;
-      const basketWidth = basket.clientWidth;
-      const basketHeight = basket.clientHeight;
-
-      
+      // Game state variables
       let gameRunning = false;
       let gameStarted = false;
       let animationId = null;
       let missedStars = 0;
       const maxMissedStars = 10;
-
       let score = 0;
-      let basketX = containerWidth / 2 - basketWidth / 2;
+      
+      // Basket movement variables
+      let basketX = 0;
       let basketVelocity = 0;
       const maxSpeed = 8;
       const acceleration = 0.8;
       const friction = 0.88;
-
-     g
-      let touchX = basketX + basketWidth / 2;
-      let isUsingTouch = false;
-      let lastTouchTime = 0;
-      let deviceOrientationSupported = false;
-      let initialGamma = null;
       
-     
+      // Input handling
+      let targetX = 0;
+      let isUsingTouch = false;
+      let lastInputTime = 0;
+      
+      // Stars array and settings
       const stars = [];
       const baseFallSpeed = 3.5;
       let currentStarInterval = 1000;
       let currentFallSpeedMultiplier = 1.0;
+      let lastTime = 0;
+      let starCreationTimer = 0;
+      
+      // Keyboard state
+      const keys = { left: false, right: false };
 
-     
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                       'ontouchstart' in window || 
-                       window.innerWidth <= 768;
+      // Get container dimensions (need to wait for layout)
+      function getContainerDimensions() {
+        return {
+          width: gameContainer.clientWidth,
+          height: gameContainer.clientHeight,
+          basketWidth: 100, // Fixed width
+          basketHeight: 60  // Fixed height
+        };
+      }
+
+      function initializePositions() {
+        const dims = getContainerDimensions();
+        basketX = dims.width / 2 - dims.basketWidth / 2;
+        targetX = basketX + dims.basketWidth / 2;
+        setBasketPosition(basketX);
+      }
 
       function updateDifficulty() {
         if (score >= 50) {
@@ -56,20 +67,20 @@
           currentFallSpeedMultiplier = 1.8;
           difficultyIndicator.textContent = 'HARD MODE!';
           difficultyIndicator.style.color = '#ff3333';
-          difficultyIndicator.style.fontSize = 'clamp(0.9rem, 3vw, 1.1rem)';
-        } else if(score >=20){
+          difficultyIndicator.style.fontSize = '1.1rem';
+        } else if(score >= 20){
               currentStarInterval = 700;
           currentFallSpeedMultiplier = 1.5;
           difficultyIndicator.textContent = 'Medium';
           difficultyIndicator.style.color = '#ff3333';
-          difficultyIndicator.style.fontSize = 'clamp(0.9rem, 3vw, 1.1rem)';
+          difficultyIndicator.style.fontSize = '1.1rem'
         }
         else {
           currentStarInterval = 1000;
           currentFallSpeedMultiplier = 1.0;
           difficultyIndicator.textContent = 'Normal';
           difficultyIndicator.style.color = '#88ffaa';
-          difficultyIndicator.style.fontSize = 'clamp(0.8rem, 2.5vw, 1rem)';
+          difficultyIndicator.style.fontSize = '0.9rem';
         }
       }
       
@@ -83,57 +94,58 @@
         gameRunning = true;
         gameStarted = true;
         startBtn.textContent = 'Pause';
-        startBtn.disabled = false;
         resetBtn.disabled = false;
         gameOverScreen.style.display = 'none';
-        tiltIndicator.style.display = 'none';
+        instructions.style.display = 'none';
         
         if (!animationId) {
-          requestAnimationFrame(gameLoop);
+          lastTime = performance.now();
+          animationId = requestAnimationFrame(gameLoop);
         }
       }
       
       function pauseGame() {
         gameRunning = false;
         startBtn.textContent = 'Resume';
-        tiltIndicator.style.display = 'block';
+        instructions.style.display = 'block';
       }
       
       function resetGame() {
         gameRunning = false;
         gameStarted = false;
+        
         if (animationId) {
           cancelAnimationFrame(animationId);
           animationId = null;
         }
        
+        // Clear all stars
         stars.forEach(star => {
-          if (star.parentNode) {
-            gameContainer.removeChild(star);
+          if (star.element && star.element.parentNode) {
+            gameContainer.removeChild(star.element);
           }
         });
         stars.length = 0;
         
+        // Reset game state
         score = 0;
         missedStars = 0;
-        basketX = containerWidth / 2 - basketWidth / 2;
         basketVelocity = 0;
-        touchX = basketX + basketWidth / 2;
         isUsingTouch = false;
-        lastTouchTime = 0;
+        lastInputTime = 0;
         lastTime = 0;
         starCreationTimer = 0;
         currentStarInterval = 1000;
         currentFallSpeedMultiplier = 1.0;
-       
+        
+        // Reset positions
+        initializePositions();
+        
         updateUI();
         startBtn.textContent = 'Start Game';
-        startBtn.disabled = false;
         resetBtn.disabled = true;
         gameOverScreen.style.display = 'none';
-        tiltIndicator.style.display = 'block';
-        
-        setBasketPosition(basketX);
+        instructions.style.display = 'block';
       }
       
       function gameOver() {
@@ -144,42 +156,46 @@
         gameOverScreen.style.display = 'flex';
         startBtn.textContent = 'Start Game';
         startBtn.disabled = true;
-        tiltIndicator.style.display = 'block';
+        instructions.style.display = 'block';
       }
       
       function createStar() {
         if (!gameRunning) return;
         
-        const star = document.createElement('div');
-        star.classList.add('star');
-        star.style.left = Math.random() * (containerWidth - 25) + 'px';
-        star.style.top = '-30px';
+        const dims = getContainerDimensions();
+        const element = document.createElement('div');
+        element.classList.add('star');
+        element.style.left = Math.random() * (dims.width - 25) + 'px';
+        element.style.top = '-30px';
         
-        star.baseFallSpeed = baseFallSpeed + Math.random() * 1.5;
-        gameContainer.appendChild(star);
+        const star = {
+          element: element,
+          x: parseFloat(element.style.left),
+          y: -30,
+          speed: baseFallSpeed + Math.random() * 1.5
+        };
+        
+        gameContainer.appendChild(element);
         stars.push(star);
       }
 
       function setBasketPosition(x) {
-        basketX = Math.min(Math.max(0, x), containerWidth - basketWidth);
+        const dims = getContainerDimensions();
+        basketX = Math.min(Math.max(0, x), dims.width - dims.basketWidth);
         basket.style.left = basketX + 'px';
       }
 
       function checkCollision(star) {
-        const rectStar = star.getBoundingClientRect();
-        const rectBasket = basket.getBoundingClientRect();
-        const offsetX = gameContainer.getBoundingClientRect().left;
-        const offsetY = gameContainer.getBoundingClientRect().top;
+        const dims = getContainerDimensions();
+        const starLeft = star.x;
+        const starTop = star.y;
+        const starRight = starLeft + 25;
+        const starBottom = starTop + 25;
 
-        const starLeft = rectStar.left - offsetX;
-        const starTop = rectStar.top - offsetY;
-        const starRight = starLeft + rectStar.width;
-        const starBottom = starTop + rectStar.height;
-
-        const basketLeft = rectBasket.left - offsetX;
-        const basketTop = rectBasket.top - offsetY;
-        const basketRight = basketLeft + rectBasket.width;
-        const basketBottom = basketTop + rectBasket.height;
+        const basketLeft = basketX;
+        const basketTop = dims.height - 80; // basket bottom position
+        const basketRight = basketLeft + dims.basketWidth;
+        const basketBottom = dims.height - 20;
 
         return !(starRight < basketLeft || starLeft > basketRight || starBottom < basketTop || starTop > basketBottom);
       }
@@ -187,26 +203,26 @@
       function updateStars() {
         if (!gameRunning) return;
         
+        const dims = getContainerDimensions();
+        
         for (let i = stars.length - 1; i >= 0; i--) {
           const star = stars[i];
-          let top = parseFloat(star.style.top);
-          
-          const currentSpeed = star.baseFallSpeed * currentFallSpeedMultiplier;
-          top += currentSpeed;
-          star.style.top = top + 'px';
+          const currentSpeed = star.speed * currentFallSpeedMultiplier;
+          star.y += currentSpeed;
+          star.element.style.top = star.y + 'px';
 
           if (checkCollision(star)) {
             score++;
             updateUI();
-            gameContainer.removeChild(star);
+            gameContainer.removeChild(star.element);
             stars.splice(i, 1);
             continue;
           }
           
-          if (top > containerHeight) {
+          if (star.y > dims.height) {
             missedStars++;
             updateUI();
-            gameContainer.removeChild(star);
+            gameContainer.removeChild(star.element);
             stars.splice(i, 1);
             
             if (missedStars >= maxMissedStars) {
@@ -217,9 +233,7 @@
         }
       }
 
-      
-      const keys = { left: false, right: false };
-
+      // Input handlers
       function handleKeyDown(e) {
         if (!gameRunning) return;
         
@@ -247,68 +261,35 @@
         if (e.code === 'ArrowRight' || e.key === 'ArrowRight') keys.right = false;
       }
 
-      
-      function handleTouchMove(e) {
+      function handlePointerMove(e) {
         if (!gameRunning) return;
         e.preventDefault();
         
         const rect = gameContainer.getBoundingClientRect();
-        const touch = e.touches[0] || e.changedTouches[0];
-        touchX = touch.clientX - rect.left;
+        targetX = e.clientX - rect.left;
         isUsingTouch = true;
-        lastTouchTime = performance.now();
-      }
-
-      function handleTouchStart(e) {
-        if (!gameRunning) return;
-        e.preventDefault();
-        handleTouchMove(e);
-      }
-
-      function handleTouchEnd(e) {
-        e.preventDefault();
-      }
-
-      
-      function handleDeviceOrientation(e) {
-        if (!gameRunning || !deviceOrientationSupported) return;
-        
-        if (initialGamma === null) {
-          initialGamma = e.gamma || 0;
-          return;
-        }
-
-        const gamma = e.gamma || 0;
-        const tiltSensitivity = 3;
-        const tiltDifference = (gamma - initialGamma) * tiltSensitivity;
-        
-        
-        const centerX = containerWidth / 2;
-        const maxTilt = 30; 
-        const normalizedTilt = Math.max(-1, Math.min(1, tiltDifference / maxTilt));
-        
-        touchX = centerX + (normalizedTilt * centerX);
-        isUsingTouch = true;
-        lastTouchTime = performance.now();
+        lastInputTime = performance.now();
       }
 
       function updateBasketMovement() {
         if (!gameRunning) return;
         
+        const dims = getContainerDimensions();
         
-        if (isUsingTouch && performance.now() - lastTouchTime > 100) {
+        // Auto-disable touch input after inactivity
+        if (isUsingTouch && performance.now() - lastInputTime > 150) {
           isUsingTouch = false;
         }
 
         if (isUsingTouch) {
-         
-          const targetX = Math.min(Math.max(0, touchX - basketWidth / 2), containerWidth - basketWidth);
-          const distance = targetX - basketX;
-          const smoothFactor = 0.3; // Increased for more responsive feel
+          // Smooth touch following
+          const targetBasketX = Math.min(Math.max(0, targetX - dims.basketWidth / 2), dims.width - dims.basketWidth);
+          const distance = targetBasketX - basketX;
+          const smoothFactor = 0.25;
           basketX += distance * smoothFactor;
           basketVelocity = distance * smoothFactor;
         } else {
-         
+          // Keyboard controls
           if (keys.left) {
             basketVelocity -= acceleration;
           } else if (keys.right) {
@@ -328,10 +309,7 @@
         setBasketPosition(basketX);
       }
 
-      let lastTime = 0;
-      let starCreationTimer = 0;
-
-      function gameLoop(timestamp = 0) {
+      function gameLoop(timestamp) {
         if (!gameRunning) {
           animationId = null;
           return;
@@ -340,12 +318,14 @@
         const deltaTime = timestamp - lastTime;
         lastTime = timestamp;
 
+        // Create stars
         starCreationTimer += deltaTime;
         if (starCreationTimer > currentStarInterval) {
           createStar();
           starCreationTimer = 0;
         }
 
+        // Update game objects
         updateStars();
         updateBasketMovement();
 
@@ -353,88 +333,49 @@
       }
 
       function init() {
-        setBasketPosition(basketX);
-        gameContainer.focus();
-        
-       
-        startBtn.addEventListener('click', () => {
-          if (!gameStarted || !gameRunning) {
+        // Wait for layout to complete
+        setTimeout(() => {
+          initializePositions();
+          gameContainer.focus();
+          
+          // Event listeners
+          startBtn.addEventListener('click', () => {
+            if (!gameStarted || !gameRunning) {
+              startGame();
+            } else {
+              pauseGame();
+            }
+          });
+          
+          resetBtn.addEventListener('click', resetGame);
+          playAgainBtn.addEventListener('click', () => {
+            resetGame();
             startGame();
-          } else {
-            pauseGame();
-          }
-        });
-        
-        resetBtn.addEventListener('click', resetGame);
-        playAgainBtn.addEventListener('click', () => {
-          resetGame();
-          startGame();
-        });
-        
-        
-        gameContainer.addEventListener('keydown', handleKeyDown);
-        gameContainer.addEventListener('keyup', handleKeyUp);
-        
-       
-        gameContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
-        gameContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
-        gameContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
-        
-      
-        gameContainer.addEventListener('mousemove', (e) => {
-          if (!gameRunning) return;
-          const rect = gameContainer.getBoundingClientRect();
-          touchX = e.clientX - rect.left;
-          isUsingTouch = true;
-          lastTouchTime = performance.now();
-        });
-
-        
-        if (window.DeviceOrientationEvent) {
-          window.addEventListener('deviceorientation', (e) => {
-            if (e.gamma !== null) {
-              deviceOrientationSupported = true;
-              handleDeviceOrientation(e);
-            }
           });
-        }
-
-        
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-          startBtn.addEventListener('click', async () => {
-            try {
-              const permission = await DeviceOrientationEvent.requestPermission();
-              if (permission === 'granted') {
-                deviceOrientationSupported = true;
-              }
-            } catch (error) {
-              console.log('Device orientation not supported');
-            }
-          });
-        }
-
-        gameContainer.addEventListener('contextmenu', e => e.preventDefault());
-        resetBtn.disabled = true;
-
-      
-        if (isMobile) {
-          if (deviceOrientationSupported) {
-            tiltIndicator.textContent = 'Tilt device or touch to move';
-          } else {
-            tiltIndicator.textContent = 'Touch to move basket';
-          }
-        } else {
-          tiltIndicator.textContent = 'Use arrow keys or mouse';
-        }
+          
+          // Keyboard events
+          document.addEventListener('keydown', handleKeyDown);
+          document.addEventListener('keyup', handleKeyUp);
+          
+          // Pointer events (works for both mouse and touch)
+          gameContainer.addEventListener('pointermove', handlePointerMove);
+          gameContainer.addEventListener('touchmove', handlePointerMove, { passive: false });
+          gameContainer.addEventListener('mousemove', handlePointerMove);
+          
+          gameContainer.addEventListener('contextmenu', e => e.preventDefault());
+          resetBtn.disabled = true;
+          
+          updateUI();
+        }, 100);
       }
 
+      // Handle window resize
       window.addEventListener('resize', () => {
-        const newContainerWidth = gameContainer.clientWidth;
-        const newContainerHeight = gameContainer.clientHeight;
-        
-        
-        basketX = (basketX / containerWidth) * newContainerWidth;
-        setBasketPosition(basketX);
+        if (gameStarted) {
+          const dims = getContainerDimensions();
+          basketX = Math.min(basketX, dims.width - dims.basketWidth);
+          setBasketPosition(basketX);
+        }
       });
 
       init();
