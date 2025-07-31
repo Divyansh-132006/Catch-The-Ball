@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catch the Falling Stars Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="gameContainer" tabindex="0">
+    <div id="scoreBoard">Score: 0</div>
+    <div id="missedCounter">Missed: 0/10</div>
+    <div id="difficultyIndicator">Normal</div>
+    <div id="gameControls">
+      <button id="startBtn" class="control-btn">Start Game</button>
+      <button id="resetBtn" class="control-btn">Reset</button>
+    </div>
+    <div id="basket"></div>
+    
+    <div id="gameOverScreen">
+      <div id="gameOverText">Game Over!</div>
+      <div id="finalScore">Final Score: 0</div>
+      <div id="gameOverReason">Too many stars missed!</div>
+      <button id="playAgainBtn" class="control-btn">Play Again</button>
+    </div>
+  </div>
+
+    <script src="index.js"></script>
+</body>
+</html>

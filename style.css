@@ -1,0 +1,208 @@
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body, html {
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to bottom, #00111a 0%, #003366 80%, #6699ff 100%);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #gameContainer {
+    position: relative;
+    width: 480px;
+    height: 720px;
+    background: radial-gradient(ellipse at center, #001a33, #000d1a);
+    border-radius: 20px;
+    box-shadow: 0 0 20px 5px rgba(51, 153, 255, 0.7);
+    overflow: hidden;
+    user-select: none;
+  }
+  #scoreBoard {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffee88;
+    font-weight: 700;
+    font-size: 1.8rem;
+    text-shadow: 0 0 6px #fff, 0 0 10px #ffff88;
+    letter-spacing: 3px;
+    z-index: 10;
+  }
+  
+  #missedCounter {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    color: #ff6b6b;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-shadow: 0 0 6px #ff0000, 0 0 10px #ff6b6b;
+    z-index: 10;
+  }
+  
+  #difficultyIndicator {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    color: #88ffaa;
+    font-weight: 600;
+    font-size: 1rem;
+    text-shadow: 0 0 6px #00ff00, 0 0 10px #88ffaa;
+    z-index: 10;
+  }
+  
+  #gameControls {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 10;
+  }
+  
+  .control-btn {
+    padding: 8px 16px;
+    background: linear-gradient(145deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  
+  .control-btn:hover {
+    background: linear-gradient(145deg, #5ba0f2, #4080cd);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  }
+  
+  .control-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .control-btn:disabled {
+    background: linear-gradient(145deg, #666, #444);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  #gameOverScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 20;
+  }
+  
+  #gameOverText {
+    color: #ffee88;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: 0 0 10px #fff, 0 0 20px #ffff88;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  #finalScore {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-shadow: 0 0 5px #fff;
+  }
+  
+  #gameOverReason {
+    color: #ffaa88;
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    text-shadow: 0 0 5px #ff8800;
+    text-align: center;
+  }
+  #basket {
+    position: absolute;
+    bottom: 20px;
+    left: calc(50% - 50px);
+    width: 100px;
+    height: 60px;
+    background: #663300;
+    border-radius: 20px 20px 10px 10px;
+    box-shadow:
+      inset 0 -5px 15px rgba(255, 200, 100, 0.8),
+      0 5px 10px rgba(0,0,0,0.5);
+    z-index: 8;
+  }
+  #basket:before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    width: 80px;
+    height: 30px;
+    background: linear-gradient(90deg, #996633, #552200);
+    border-radius: 15px 15px 0 0;
+    box-shadow: inset 0 5px 10px rgba(255, 230, 170, 0.8);
+  }
+  .star {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(circle at 10px 10px, #fffacd, #fff700, #ffd700);
+    border-radius: 50%;
+    box-shadow:
+      0 0 10px 3px #fff9a8,
+      0 0 12px 6px #fff700;
+    /* Star shine animation */
+    animation: twinkle 2s infinite alternate;
+  }
+  @keyframes twinkle {
+    0% {
+      filter: brightness(1);
+      transform: scale(1);
+    }
+    100% {
+      filter: brightness(1.5);
+      transform: scale(1.2);
+    }
+  }
+  /* Star shape using :before and :after */
+  .star:before, .star:after {
+    content: "";
+    position: absolute;
+    background: inherit;
+    border-radius: 50%;
+  }
+  .star:before {
+    top: 6px;
+    left: 0;
+    width: 25px;
+    height: 12px;
+    transform: rotate(60deg);
+    filter: inherit;
+  }
+  .star:after {
+    top: 6px;
+    left: 0;
+    width: 25px;
+    height: 12px;
+    transform: rotate(-60deg);
+    filter: inherit;
+  }
