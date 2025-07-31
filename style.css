@@ -1,5 +1,4 @@
-
-  * {
+* {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -12,6 +11,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    touch-action: none; /* Prevent default touch behaviors */
   }
   #gameContainer {
     position: relative;
@@ -22,6 +22,7 @@
     box-shadow: 0 0 20px 5px rgba(51, 153, 255, 0.7);
     overflow: hidden;
     user-select: none;
+    touch-action: none; /* Prevent scrolling and zooming */
   }
   #scoreBoard {
     position: absolute;
