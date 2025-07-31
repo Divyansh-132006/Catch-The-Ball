@@ -44,13 +44,20 @@
 
     
     function updateDifficulty() {
-      if (score >= 20) {
+      if (score >= 50) {
         currentStarInterval = 300; // Much faster spawning (3x faster)
         currentFallSpeedMultiplier = 1.8; // Stars fall 80% faster
         difficultyIndicator.textContent = 'HARD MODE!';
         difficultyIndicator.style.color = '#ff3333';
         difficultyIndicator.style.fontSize = '1.1rem';
-      } else {
+      } else if(score >=20){
+         currentStarInterval = 600;
+        currentFallSpeedMultiplier = 1.4; 
+        difficultyIndicator.textContent = 'Medium';
+        difficultyIndicator.style.color = '#88ffaa';
+        difficultyIndicator.style.fontSize = '1rem'
+      }
+      else {
         currentStarInterval = 1000; // Normal speed
         currentFallSpeedMultiplier = 1.0; // Normal fall speed
         difficultyIndicator.textContent = 'Normal';
