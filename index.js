@@ -44,7 +44,7 @@
 
     
     function updateDifficulty() {
-      if (score >= 50) {
+      if (score >= 20) {
         currentStarInterval = 300; // Much faster spawning (3x faster)
         currentFallSpeedMultiplier = 1.8; // Stars fall 80% faster
         difficultyIndicator.textContent = 'HARD MODE!';
